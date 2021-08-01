@@ -1,6 +1,6 @@
 # flutter_smartpos_printer
 
-A new flutter plugin project.
+A flutter plugin for smart POS printer for android platform.
 
 ## Getting Started
 
