@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_smartpos_printer/flutter_smartpos_printer.dart';
 
 void main() {
@@ -14,45 +11,94 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  FlutterSmartposPrinter _printer = FlutterSmartposPrinter();
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    initPrinter();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await FlutterSmartposPrinter.platformVersion ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+  @override
+  void dispose() {
+    _printer.releasePrinter();
+    super.dispose();
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+  Future<void> initPrinter() async {
+    await _printer.initPrinter();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Simbo Printer Test'),
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              child: Text("Print Text"),
+              onPressed: () async {
+                int? res = await _printer.printText("Hello Lambirou !");
+                print("printText: " + res.toString());
+              },
+            ),
+            ElevatedButton(
+              child: Text("Print Image"),
+              onPressed: () async {
+                int? res = await _printer.printBitmap("simbo_logo_2.png");
+                print("printBitmap: " + res.toString());
+              },
+            ),
+            ElevatedButton(
+              child: Text("Print QR Code"),
+              onPressed: () async {
+                int? res = await _printer.printQrCode("Simbo taxe");
+                print("printQrCode: " + res.toString());
+              },
+            ),
+            ElevatedButton(
+              child: Text("Feed Paper"),
+              onPressed: () async {
+                int? res = await _printer.feedPaper(5000);
+                print("feedPaper: " + res.toString());
+              },
+            ),
+            ElevatedButton(
+              child: Text("Set YSpace"),
+              onPressed: () async {
+                bool? res = await _printer.setYSpace(50);
+                print("setYSpace: " + res.toString());
+              },
+            ),
+            ElevatedButton(
+              child: Text("Imprimer un reçu"),
+              onPressed: () async {
+                await _printer.printBitmap("simbo_logo_2.png");
+                await _printer.printSimboReceipt(
+                  montant: 1250,
+                  reference: "R0010000000047",
+                  date: "08/09/2021 12:43:39",
+                  libelle: "Paiement taxe antérieure",
+                  ville: "Mairie de la Commune III",
+                  region: "District de Bamako",
+                  tel: "45556890",
+                  ctb: "000000000",
+                  ref: "CIII/68/MALI",
+                  fax: "0",
+                  contribuable: "Canis Asseke",
+                  matricule: "C001000006",
+                  equipement: "MAG-00000005-KK",
+                  agent: "Touré Toutouya",
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
